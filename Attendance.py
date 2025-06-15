@@ -46,8 +46,9 @@ with tab1:
         cursor.close()
         conn.close()
 # TAB 2: Daily Status with From–To Date
+# TAB 2: Pivoted Attendance Status
 with tab2:
-    st.title("Attendance Status by Date Range")
+    st.title("Attendance Status by Date (Pivoted View)")
     from_date = st.date_input("From Date")
     to_date = st.date_input("To Date")
 
@@ -56,6 +57,12 @@ with tab2:
             conn = mysql.connector.connect(**DB_CONFIG)
             cursor = conn.cursor(dictionary=True)
 
+            # Get all roll numbers and names
+            cursor.execute("SELECT id AS RollNo, StudentName FROM Students_Data")
+            students = cursor.fetchall()
+            students_df = pd.DataFrame(students)
+
+            # Get attendance within date range
             query = f"""
             SELECT 
                 s.id AS RollNo,
@@ -73,15 +80,19 @@ with tab2:
             ) d
             LEFT JOIN AttendanceRecord a 
                 ON s.id = a.RollNo AND a.Date = d.Date
-            ORDER BY d.Date, s.id
+            ORDER BY s.id, d.Date
             """
 
             cursor.execute(query)
-            results = cursor.fetchall()
-            df2 = pd.DataFrame(results)
+            attendance = cursor.fetchall()
+            attendance_df = pd.DataFrame(attendance)
+
+            # Pivot: Dates as columns
+            pivot_df = attendance_df.pivot(index=["RollNo", "StudentName"], columns="Date", values="Status")
+            pivot_df = pivot_df.reset_index()
 
             st.subheader(f"Attendance from {from_date} to {to_date}")
-            st.dataframe(df2)
+            st.dataframe(pivot_df)
 
         except mysql.connector.Error as err:
             st.error(f"Database error: {err}")
