@@ -130,10 +130,14 @@ with tab2:
             
             # Download Button
             with open(excel_path, "rb") as file:
-                st.download_button("📥 Download Excel", data=file.read(),
-                                   file_name=f"Attendance_{selected_batch}.xlsx",
-                                   mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-            
+                st.download_button(
+                    label="📥 Download Excel",
+                    data=file.read(),
+                    file_name=f"Attendance_{selected_batch}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    key=f"download_excel_{selected_batch}"  # 👈 This prevents the duplicate ID error
+                )
+                        
             
             with open("/tmp/attendance_report.xlsx", "rb") as file:
                 st.download_button("📥 Download Excel", data=file.read(),
