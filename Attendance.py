@@ -13,6 +13,7 @@ DB_CONFIG = {
 # Create tabs
 tab1, tab2 = st.tabs(["📝 Attendance Summary", "📅 Daily Status"])
 
+
 # TAB 1: JOIN of AttendanceRecord + Students_Data
 with tab1:
     try:
