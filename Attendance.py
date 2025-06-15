@@ -10,11 +10,10 @@ DB_CONFIG = {
     'database': 'u263681140_Attendance'
 }
 
-# Create tabs
-tab1, tab2 = st.tabs(["📝 Attendance Summary", "📅 Daily Status"])
+# Streamlit App with Tabs
+tab1, tab2 = st.tabs(["📝 Attendance Summary", "📅 Attendance Status by Date Range"])
 
-
-# TAB 1: JOIN of AttendanceRecord + Students_Data
+# TAB 1: Attendance Summary Sorted by RollNo
 with tab1:
     try:
         conn = mysql.connector.connect(**DB_CONFIG)
@@ -33,13 +32,13 @@ with tab1:
             Students_Data sd
         ON 
             ar.RollNo = sd.id
-        ORDER BY ar.id DESC
+        ORDER BY ar.RollNo ASC, ar.Date DESC
         """
         cursor.execute(query)
         results = cursor.fetchall()
         df1 = pd.DataFrame(results)
 
-        st.title("Attendance Summary")
+        st.title("Attendance Summary (Sorted by Roll No)")
         st.dataframe(df1)
 
     except mysql.connector.Error as err:
@@ -48,11 +47,13 @@ with tab1:
         cursor.close()
         conn.close()
 
-# TAB 2: Present/Absent by Date
+# TAB 2: Daily Status with From–To Date
 with tab2:
-    selected_date = st.date_input("Select Date to Check Attendance")
+    st.title("Attendance Status by Date Range")
+    from_date = st.date_input("From Date")
+    to_date = st.date_input("To Date")
 
-    if selected_date:
+    if from_date and to_date and from_date <= to_date:
         try:
             conn = mysql.connector.connect(**DB_CONFIG)
             cursor = conn.cursor(dictionary=True)
@@ -61,22 +62,27 @@ with tab2:
             SELECT 
                 s.id AS RollNo,
                 s.StudentName,
+                d.Date,
                 CASE 
                     WHEN a.RollNo IS NOT NULL THEN 'Present'
                     ELSE 'Absent'
                 END AS Status
             FROM Students_Data s
-            LEFT JOIN (
-                SELECT DISTINCT RollNo
+            CROSS JOIN (
+                SELECT DISTINCT Date
                 FROM AttendanceRecord
-                WHERE Date = '{selected_date}'
-            ) a ON s.id = a.RollNo
+                WHERE Date BETWEEN '{from_date}' AND '{to_date}'
+            ) d
+            LEFT JOIN AttendanceRecord a 
+                ON s.id = a.RollNo AND a.Date = d.Date
+            ORDER BY d.Date, s.id
             """
+
             cursor.execute(query)
             results = cursor.fetchall()
             df2 = pd.DataFrame(results)
 
-            st.title("Daily Attendance Status")
+            st.subheader(f"Attendance from {from_date} to {to_date}")
             st.dataframe(df2)
 
         except mysql.connector.Error as err:
@@ -84,3 +90,5 @@ with tab2:
         finally:
             cursor.close()
             conn.close()
+    elif from_date > to_date:
+        st.warning("⚠️ 'From Date' must be before or equal to 'To Date'")
