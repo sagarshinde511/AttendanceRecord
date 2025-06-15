@@ -90,8 +90,13 @@ with tab2:
             df = pd.DataFrame(records)
 
             # Pivot
-            pivot_df = df.pivot(index=["RollNo", "StudentName"], columns="Date", values="Status").reset_index()
-
+            #pivot_df = df.pivot(index=["RollNo", "StudentName"], columns="Date", values="Status").reset_index()
+            pivot_df = df.pivot_table(
+                index=["RollNo", "StudentName"],
+                columns="Date",
+                values="Status",
+                aggfunc="first"  # Or you can use 'max' or 'min' based on logic
+            ).reset_index()
             # Highlight 'Absent'
             def highlight_absents(val):
                 return 'background-color: #ffcccc' if val == 'Absent' else ''
