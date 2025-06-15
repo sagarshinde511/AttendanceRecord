@@ -13,7 +13,6 @@ DB_CONFIG = {
 # Streamlit App with Tabs
 tab1, tab2 = st.tabs(["📝 Attendance Summary", "📅 Attendance Status by Date Range"])
 
-# TAB 1: Attendance Summary Sorted by RollNo
 with tab1:
     try:
         conn = mysql.connector.connect(**DB_CONFIG)
@@ -32,13 +31,13 @@ with tab1:
             Students_Data sd
         ON 
             ar.RollNo = sd.id
-        ORDER BY ar.RollNo ASC, ar.Date DESC
+        ORDER BY STR_TO_DATE(ar.Date, '%Y-%m-%d') DESC, STR_TO_DATE(ar.Time, '%H:%i:%s') DESC
         """
         cursor.execute(query)
         results = cursor.fetchall()
         df1 = pd.DataFrame(results)
 
-        st.title("Attendance Summary (Sorted by Roll No)")
+        st.title("Attendance Summary (Latest First)")
         st.dataframe(df1)
 
     except mysql.connector.Error as err:
@@ -46,7 +45,6 @@ with tab1:
     finally:
         cursor.close()
         conn.close()
-
 # TAB 2: Daily Status with From–To Date
 with tab2:
     st.title("Attendance Status by Date Range")
