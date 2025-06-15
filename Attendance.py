@@ -107,10 +107,34 @@ with tab2:
             st.dataframe(styled_df, use_container_width=True)
 
             # Excel Download
-            output = pd.ExcelWriter("/tmp/attendance_report.xlsx", engine='xlsxwriter')
-            pivot_df.to_excel(output, index=False, sheet_name='Attendance')
-            output.close()
-
+            
+            excel_path = "/tmp/attendance_report.xlsx"
+            with pd.ExcelWriter(excel_path, engine='xlsxwriter') as writer:
+                pivot_df.to_excel(writer, index=False, sheet_name='Attendance')
+                workbook = writer.book
+                worksheet = writer.sheets['Attendance']
+            
+                # Format: Red fill for "Absent"
+                red_format = workbook.add_format({'bg_color': '#FFC7CE'})  # Light red
+                num_rows, num_cols = pivot_df.shape
+            
+                # Apply format to only the date columns (columns 2 onward)
+                for col in range(2, num_cols):
+                    col_letter = chr(65 + col) if col < 26 else chr(64 + col // 26) + chr(65 + col % 26)
+                    worksheet.conditional_format(f"{col_letter}2:{col_letter}{num_rows+1}", {
+                        'type': 'text',
+                        'criteria': 'containing',
+                        'value': 'Absent',
+                        'format': red_format
+                    })
+            
+            # Download Button
+            with open(excel_path, "rb") as file:
+                st.download_button("📥 Download Excel", data=file.read(),
+                                   file_name=f"Attendance_{selected_batch}.xlsx",
+                                   mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            
+            
             with open("/tmp/attendance_report.xlsx", "rb") as file:
                 st.download_button("📥 Download Excel", data=file.read(),
                                    file_name=f"Attendance_{selected_batch}.xlsx",
