@@ -47,26 +47,28 @@ with tab1:
         conn.close()
 # TAB 2: Daily Status with From–To Date
 # TAB 2: Pivoted Attendance Status
+# TAB 2: Pivoted Attendance with Batch Filter + Highlight + Excel
 with tab2:
     st.title("Attendance Status by Date (Pivoted View)")
     from_date = st.date_input("From Date")
     to_date = st.date_input("To Date")
 
-    if from_date and to_date and from_date <= to_date:
-        try:
-            conn = mysql.connector.connect(**DB_CONFIG)
-            cursor = conn.cursor(dictionary=True)
+    try:
+        conn = mysql.connector.connect(**DB_CONFIG)
+        cursor = conn.cursor(dictionary=True)
 
-            # Get all roll numbers and names
-            cursor.execute("SELECT id AS RollNo, StudentName FROM Students_Data")
-            students = cursor.fetchall()
-            students_df = pd.DataFrame(students)
+        # Fetch all batch options
+        cursor.execute("SELECT DISTINCT Batch FROM Students_Data")
+        batch_list = [row['Batch'] for row in cursor.fetchall()]
+        selected_batch = st.selectbox("Select Batch", batch_list)
 
-            # Get attendance within date range
+        if from_date and to_date and from_date <= to_date and selected_batch:
+            # Get attendance for selected batch
             query = f"""
             SELECT 
                 s.id AS RollNo,
                 s.StudentName,
+                s.Batch,
                 d.Date,
                 CASE 
                     WHEN a.RollNo IS NOT NULL THEN 'Present'
@@ -80,24 +82,39 @@ with tab2:
             ) d
             LEFT JOIN AttendanceRecord a 
                 ON s.id = a.RollNo AND a.Date = d.Date
+            WHERE s.Batch = %s
             ORDER BY s.id, d.Date
             """
+            cursor.execute(query, (selected_batch,))
+            records = cursor.fetchall()
+            df = pd.DataFrame(records)
 
-            cursor.execute(query)
-            attendance = cursor.fetchall()
-            attendance_df = pd.DataFrame(attendance)
+            # Pivot
+            pivot_df = df.pivot(index=["RollNo", "StudentName"], columns="Date", values="Status").reset_index()
 
-            # Pivot: Dates as columns
-            pivot_df = attendance_df.pivot(index=["RollNo", "StudentName"], columns="Date", values="Status")
-            pivot_df = pivot_df.reset_index()
+            # Highlight 'Absent'
+            def highlight_absents(val):
+                return 'background-color: #ffcccc' if val == 'Absent' else ''
 
-            st.subheader(f"Attendance from {from_date} to {to_date}")
-            st.dataframe(pivot_df)
+            styled_df = pivot_df.style.applymap(highlight_absents, subset=pivot_df.columns[2:])
 
-        except mysql.connector.Error as err:
-            st.error(f"Database error: {err}")
-        finally:
-            cursor.close()
-            conn.close()
-    elif from_date > to_date:
-        st.warning("⚠️ 'From Date' must be before or equal to 'To Date'")
+            st.subheader(f"{selected_batch} Attendance from {from_date} to {to_date}")
+            st.dataframe(styled_df, use_container_width=True)
+
+            # Excel Download
+            output = pd.ExcelWriter("/tmp/attendance_report.xlsx", engine='xlsxwriter')
+            pivot_df.to_excel(output, index=False, sheet_name='Attendance')
+            output.close()
+
+            with open("/tmp/attendance_report.xlsx", "rb") as file:
+                st.download_button("📥 Download Excel", data=file.read(),
+                                   file_name=f"Attendance_{selected_batch}.xlsx",
+                                   mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        elif from_date > to_date:
+            st.warning("⚠️ 'From Date' must be before or equal to 'To Date'")
+
+    except mysql.connector.Error as err:
+        st.error(f"Database error: {err}")
+    finally:
+        cursor.close()
+        conn.close()
