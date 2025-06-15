@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import mysql.connector
 
-# MySQL database connection
+# MySQL connection
 conn = mysql.connector.connect(
     host="82.180.143.66",
     user="u263681140_AttendanceInt",
@@ -12,19 +12,14 @@ conn = mysql.connector.connect(
 
 cursor = conn.cursor(dictionary=True)
 
-# SQL JOIN query
+# SQL JOIN for required fields
 query = """
 SELECT 
-    ar.id AS AttendanceID,
+    ar.RollNo,
     ar.Date,
     ar.Time,
-    ar.RollNo,
-    sd.StudentName,
-    sd.StudentCollege,
-    sd.Batch,
-    sd.Mobile,
-    sd.Email,
-    sd.Address
+    sd.id,
+    sd.StudentName
 FROM 
     AttendanceRecord ar
 JOIN 
@@ -40,8 +35,8 @@ results = cursor.fetchall()
 # Convert to DataFrame
 df = pd.DataFrame(results)
 
-# Display in Streamlit
-st.title("Student Attendance with Details")
+# Streamlit display
+st.title("Attendance Summary")
 st.dataframe(df)
 
 # Cleanup
