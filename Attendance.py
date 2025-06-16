@@ -108,10 +108,11 @@ with tabs[1]:
     for row_idx, row in pivot_df.iterrows():
         for col_idx, value in enumerate(row, 1):
             cell = ws.cell(row=row_idx + 2, column=col_idx, value=value)
+            #set colour
             if value == 'Absent':
-                cell.fill = PatternFill(start_color="FF9999", end_color="FF9999", fill_type="solid")
+                cell.fill = PatternFill(start_color="FF9999", end_color="FF9999", fill_type="solid")  # Light Red
             elif value == 'Holiday':
-                cell.fill = PatternFill(start_color="FFFF99", end_color="FFFF99", fill_type="solid")
+                cell.fill = PatternFill(start_color="FFFACD", end_color="FFFACD", fill_type="solid")  # Light Yellow (LemonChiffon)
 
     # Save to BytesIO
     excel_file = BytesIO()
