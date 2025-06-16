@@ -110,9 +110,9 @@ with tabs[1]:
             cell = ws.cell(row=row_idx + 2, column=col_idx, value=value)
             #set colour
             if value == 'Absent':
-                cell.fill = PatternFill(start_color="FF9999", end_color="FF9999", fill_type="solid")  # Light Red
+                cell.fill = PatternFill(start_color="FF6666", end_color="FF6666", fill_type="solid")  # Clear Light Red
             elif value == 'Holiday':
-                cell.fill = PatternFill(start_color="FFFACD", end_color="FFFACD", fill_type="solid")  # Light Yellow (LemonChiffon)
+                cell.fill = PatternFill(start_color="FFFFCC", end_color="FFFFCC", fill_type="solid")  # Very Light Yellow
 
     # Save to BytesIO
     excel_file = BytesIO()
