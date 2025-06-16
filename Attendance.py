@@ -65,6 +65,13 @@ with tabs[1]:
     attendance = pd.DataFrame(cursor.fetchall())
     attendance['Status'] = 'Present'
 
+        # Ensure consistent data types
+    full_grid['RollNo'] = full_grid['RollNo'].astype(str)
+    attendance['RollNo'] = attendance['RollNo'].astype(str)
+    
+    full_grid['Date'] = pd.to_datetime(full_grid['Date']).dt.strftime('%Y-%m-%d')
+    attendance['Date'] = pd.to_datetime(attendance['Date']).dt.strftime('%Y-%m-%d')
+
     # Merge and fill missing
     merged = full_grid.merge(attendance, on=['RollNo', 'Date'], how='left')
     merged['Status'] = merged['Status'].fillna('Absent')
