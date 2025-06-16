@@ -9,9 +9,9 @@ from openpyxl.styles import PatternFill
 # Function to apply color in Streamlit table
 def highlight_status(val):
     if val == 'Absent':
-        return 'background-color: #FF9999'  # Red
+        return 'background-color: #FF6666'  # Red
     elif val == 'Holiday':
-        return 'background-color: #FFFF99'  # Yellow
+        return 'background-color: #FFFFCC'  # Yellow
     return ''
 # MySQL connection
 conn = mysql.connector.connect(
