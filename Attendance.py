@@ -91,15 +91,13 @@ with tabs[1]:
 
     # Reorder
     pivot_df = pivot_df[['RollNo', 'StudentName'] + sorted(pivot_df.columns[2:])]
+    
     # Sort by RollNo ascending
     pivot_df = pivot_df.sort_values(by="RollNo")
-
-
+    
     # Display with colors
     styled_df = pivot_df.style.applymap(highlight_status, subset=pivot_df.columns[2:])
-    st.dataframe(styled_df, use_container_width=True)
-
-    # Excel generation with color
+    st.dataframe(styled_df, use_container_width=True)    # Excel generation with color
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Attendance Report"
