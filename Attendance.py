@@ -93,8 +93,8 @@ with tabs[1]:
     pivot_df = pivot_df[['RollNo', 'StudentName'] + sorted(pivot_df.columns[2:])]
     
     # Sort by RollNo ascending
-    pivot_df = pivot_df.sort_values(by="RollNo")
-    
+    pivot_df['RollNo'] = pivot_df['RollNo'].astype(int)
+    pivot_df = pivot_df.sort_values(by="RollNo")    
     # Display with colors
     styled_df = pivot_df.style.applymap(highlight_status, subset=pivot_df.columns[2:])
     st.dataframe(styled_df, use_container_width=True)    # Excel generation with color
